@@ -4,6 +4,7 @@
 'use strict';
 
 var renderDocumentList = function (docs) {
+    console.log(docs)
     var i, j, len, jlen, doc, author, $doc,
         $list = $('.documents').find('.list').empty().removeClass('populated'),
         documentTemplate = $('#documentTemplate').html(),
@@ -98,12 +99,14 @@ var errorHandler = function (req, res) {
 };
 
 var getDocuments = function (event) {
+    console.log("getDocuments")
     MendeleySDK.API.documents
-        .list({ sort: 'created', order: 'desc' })
+        .list({view:'bib' })
         .done(renderDocumentList)
         .fail(errorHandler);
     event.preventDefault();
 };
+
 
 var getFolders = function (event) {
     MendeleySDK.API.folders

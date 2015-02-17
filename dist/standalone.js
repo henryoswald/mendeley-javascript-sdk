@@ -480,7 +480,7 @@
             'Content-Type': 'application/vnd.mendeley-document.1+json'
         };
 
-        var listDocuments = requestFun('GET', '/documents/');
+        var listDocuments = requestFun('GET', '/documents');
         var listFolder = requestFun('GET', '/folders/{id}/documents', ['id']);
         return {
 

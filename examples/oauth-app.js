@@ -8,6 +8,7 @@ module.exports = function(app, config) {
         clientID: config.clientId,
         clientSecret: config.clientSecret
     });
+    var request = require("request")
 
     var cookieParser = require('cookie-parser');
     var accessTokenCookieName = 'accessToken';
@@ -15,7 +16,7 @@ module.exports = function(app, config) {
     var oauthPath = '/oauth';
     var examplesPath = '/examples';
     var tokenExchangePath = '/oauth/token-exchange';
-
+    var cachedAuth = null
     app.use(cookieParser());
 
     app.get('/', function(req, res) {
@@ -30,7 +31,7 @@ module.exports = function(app, config) {
     });
 
     app.get(oauthPath, function (req, res) {
-        var authorizationUri = oauth2.AuthCode.authorizeURL({
+        var authorizationUri = oauth2.authCode.authorizeURL({
             redirect_uri: config.redirectUri,
             scope: config.scope || 'all'
         });
@@ -42,7 +43,7 @@ module.exports = function(app, config) {
     app.get(tokenExchangePath, function (req, res, next) {
         console.log('Starting token exchange');
         var code = req.query.code;
-        oauth2.AuthCode.getToken({
+        oauth2.authCode.getToken({
             redirect_uri: config.redirectUri,
             code: code,
         }, function(error, result) {
@@ -50,11 +51,25 @@ module.exports = function(app, config) {
                 console.log('Error exchanging token');
                 res.redirect('/logout')
             } else {
-                setCookies(res, result);
-                res.redirect(examplesPath);
+                cachedAuth = result
+                res.redirect("/bibtex");
             }
         });
     });
+
+    app.get("/bibtex", function(req, res){
+        var options = {
+            url : 'https://api.mendeley.com/documents?view=bib',
+            headers: {
+                Authorization: "Bearer "+cachedAuth.access_token,
+                Accept: "application/x-bibtex"
+            }
+        }
+        request.get(options, function(err, response, body){
+            console.log(body)
+            res.send(body)
+        })
+    })
 
     app.get('/login', function(req, res) {
         console.log('Logging in, clearing any existing cookies');
